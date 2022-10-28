@@ -1,3 +1,7 @@
+const Restaurant = require("../models/Restaurants");
+
+
+
 // @desc      Get all restaurants
 // @route     GET /api/v1/restaurants
 // @access    Public
@@ -24,12 +28,22 @@ exports.getRestaurant =  (req, res, next) => {
   // @desc      Create a single restaurants
 // @route     POST /api/v1/restaurants/:id
 // @access    Private
+// *! okd
+//*?
+//** 
+//*TODO 
 
-exports.createRestaurant = (req, res, next) => {
-    res.status(200).json({
-        success: true,
-        msg: `you want to create a new resto`
-    })
+exports.createRestaurant = async (req, res, next) => {
+   console.log(req.body)
+   const restaurant = await Restaurant.create(req.body);
+
+   res.status(201).json({
+    success: true,
+    data: restaurant
+   });
+
+
+
 }
 
 

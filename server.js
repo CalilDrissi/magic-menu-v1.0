@@ -14,7 +14,8 @@ const restaurants = require('./routes/restaurants');
 
 const app = express();
 
-
+// Body parser
+app.use(express.json());
 
 
 
