@@ -6,24 +6,23 @@ const router = express.Router({
 
 const {
   getItems,
-//   getItem,
+  getItem,
   createItem,
-//   updateItem,
-//   deleteItem,
+  updateItem,
+  deleteItem,
 } = require("../controllers/Items");
 
 
 router.route("/").get(getItems)
     .post(createItem);
 
-    /*
-router
-  .route("/:id")
-  .get(getItem)
-  .put(updateItem)
-  .delete(deleteItem);
+    router
+    .route("/:id")
+    .get(getItem)
+    .put(updateItem)
+    .delete(deleteItem);
+    
 
-*/
 
 /*
 just for reference before using controllers

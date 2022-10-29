@@ -20,6 +20,10 @@ const ItemSchema = mongoose.Schema({
         ref: 'Restaurant',
         required: true
       },
+      
+      // add a category filed. 
+
+      // in stock
 
     //name
 
@@ -27,7 +31,7 @@ const ItemSchema = mongoose.Schema({
 
     //price
 
-    //ingredients
+    //ingredients + quantity
 
     //image
 

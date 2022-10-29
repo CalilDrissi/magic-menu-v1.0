@@ -40,19 +40,84 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 
 
 //*? read a single menu item
+// @route     GET /api/v1/items/:id
+// @access    Public
+exports.getItem = asyncHandler(async (req, res, next) => {
+  const item = await Item.findById(req.params.id).populate({
+    path: 'restaurant',
+    select: 'name'
+  });
+
+  if (!item) {
+    return next(
+      new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: item
+  });
+});
 
 
 
 //*? update a menu item
+// * @route     PUT /api/v1/items/:id
+// *! @access    Private
+
+exports.updateItem = asyncHandler( async (req, res, next) => {
+  let  item = await Item.findById(req.params.id);
+  if (!item) {
+    return next(
+      new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+  item = await Item.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  }).populate({
+    path: 'restaurant',
+    select: "name"
+  });
+
+  res.status(200).json({
+    success: true,
+    data: item
+  });
+
+
+});
 
 
 
 //*? delete a menu item
+// * @route     DELETE /api/v1/items/:id
+// *! @access    Private
+
+exports.deleteItem = asyncHandler( async (req, res, next) => {
+  const item = await Item.findById(req.params.id);
+
+  if (!item) {
+    return next(
+      new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+await item.remove();
+
+  res.status(200).json({
+    success: true,
+    data:  {}
+  });
+
+
+});
 
 
 
 //*? get all menu items of a single restaurant
-//*! need a where clause in the query
 // @desc      Get items
 // @route     GET /api/v1/items
 // @route     GET /api/v1/restaurants/:restaurantId/items
@@ -61,7 +126,12 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 exports.getItems = asyncHandler(async (req, res, next) => {
     let query; 
     if (req.params.restaurantId) {
-      query = Item.find({ restaurant: req.params.restaurantId });
+      query = Item.find({ restaurant: req.params.restaurantId }).populate(
+        {
+          path: 'restaurant',
+          select: 'name'
+        }
+      );
     } else {
       query = Item.find().populate({
         path: 'restaurant',
