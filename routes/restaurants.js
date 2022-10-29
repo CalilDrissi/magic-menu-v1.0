@@ -1,6 +1,6 @@
 const express = require("express");
 
-const router = express.Router();
+
 
 const {
   getRestaurants,
@@ -9,6 +9,19 @@ const {
   updateRestaurant,
   deleteRestaurant,
 } = require("../controllers/restaurants");
+
+// include other ressource routers 
+
+const itemRouter = require('./items.js');
+
+
+const router = express.Router();
+
+
+
+//Reroute into other ressrouce routers
+
+router.use("/:restaurantId/items", itemRouter);
 
 router.route("/").get(getRestaurants).post(createRestaurant);
 

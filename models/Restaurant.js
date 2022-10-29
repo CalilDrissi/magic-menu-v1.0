@@ -69,5 +69,12 @@ const RestaurantSchema = new mongoose.Schema(
 );
 
 
+// Cascade delete courses when a bootcamp is deleted
+RestaurantSchema.pre('remove', async function(next) {
+  console.log(`Items being removed from Restaurant ${this._id}`);
+  await this.model('Item').deleteMany({ restaurant: this._id });
+  next();
+});
+
 
 module.exports = mongoose.model('Restaurant', RestaurantSchema);

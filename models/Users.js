@@ -1,6 +1,9 @@
 import mongoose from "mongoose"
 
 
-const userSchema = mongoose.Schema({
+const UserSchema = mongoose.Schema({
     
 })
+
+
+module.exports = mongoose.model('User', UserSchema);
