@@ -1,3 +1,4 @@
+const path = require('path');
 const Item = require("../models/Item");
 const Restaurant = require("../models/Restaurant");
 const ErrorResponse = require("../utils/errorResponse");
@@ -36,6 +37,69 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 
 
 });
+
+//*TODO  add a photo to the menu  item
+//*? route PUT /api/v1/items/:id/photo
+//*! Private
+exports.addImage = asyncHandler( async (req, res, next ) => {
+  const item = await Item.findById(req.params.id);
+  if (!item) {
+    return next(
+      new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+  if(!req.files) {
+    return next(
+      new ErrorResponse(`no image uploaded`, 400)
+    ); 
+  }
+
+  // console.log(req.files)
+
+  const file = req.files.file;
+
+  // validation  file is photo . file size not too big.
+  if(!file.mimetype.startsWith('image')) {
+    return next(
+      new ErrorResponse(`must be an image file`, 400)
+    );  
+  }
+// check file size
+  if (file.size > process.env.MAX_FILE_UPLOAD) {
+    return next(
+      new ErrorResponse(`must be under 1MB`, 400)
+    );  
+  }
+
+// create custom file name
+file.name = `photo_${item._id}${path.parse(file.name).ext}`;
+
+// console.log(file.name);
+
+// upload the photo
+
+file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async err=> {
+  if(err) {
+    console.error(err);
+    return next(
+      new ErrorResponse(`upload failed`, 500)
+    );  
+  }
+await Item.findByIdAndUpdate(req.params.id, {photo: file.name});
+res.status(200).json({
+  success: true,
+  data: file.name
+})
+
+})
+
+});
+
+
+
+
+
 
 
 

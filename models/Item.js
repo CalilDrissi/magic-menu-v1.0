@@ -7,6 +7,10 @@ const ItemSchema = mongoose.Schema({
         trim: true,
         required: [true, 'Please add a course title']
       },
+      photo: {
+          type: String,
+          default: 'no-photo.jpg'
+      },
       description: {
         type: String,
         required: [true, 'Please add a description']
@@ -19,9 +23,11 @@ const ItemSchema = mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Restaurant',
         required: true
-      },
-      
+      }
+
       // add a category filed. 
+       // add it in the restaurant model
+
 
       // in stock
 

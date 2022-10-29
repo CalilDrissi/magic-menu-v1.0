@@ -53,7 +53,8 @@ const RestaurantSchema = new mongoose.Schema(
             type: String,
             default: 'no-photo.jpg'
           },
-
+          // add categories ARRAY and ref it in the item model using a form that will let you only select from these options, or you can add new one.
+          // and update the restaurant categories field. 
 
 
 

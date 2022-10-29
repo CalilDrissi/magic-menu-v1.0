@@ -10,18 +10,21 @@ const {
   createItem,
   updateItem,
   deleteItem,
+  addImage
 } = require("../controllers/Items");
 
 
 router.route("/").get(getItems)
     .post(createItem);
 
-    router
+router
     .route("/:id")
     .get(getItem)
     .put(updateItem)
     .delete(deleteItem);
     
+
+router.route("/:id/photo").put(addImage);
 
 
 /*

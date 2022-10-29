@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const fileupload = require("express-fileupload");
 const connectDB = require("./config/db");
 const errorHandler = require('./middleware/error');
 
@@ -21,7 +22,10 @@ const items = require("./routes/items");
 const app = express();
 
 // load middlewares
+    // handling json
 app.use(express.json());
+    // handling files upload
+app.use(fileupload());
 
 
 
