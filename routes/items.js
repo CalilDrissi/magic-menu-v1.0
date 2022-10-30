@@ -1,5 +1,7 @@
 const express = require("express");
 const advancedResults = require("../middleware/advancedResults");
+const { protect, authorize } = require("../middleware/auth");
+
 const Item = require("../models/Item");
 
 const router = express.Router({
@@ -14,31 +16,26 @@ const {
   deleteItem,
   addImage,
 } = require("../controllers/Items");
-const Restaurant = require("../models/Restaurant");
+
 
 router
   .route("/")
   .get(
     advancedResults(Item, {
-      path: "restaurant",  
-      select: "name address"
+      path: "restaurant",
+      select: "name address",
     }),
     getItems
   )
-  .post(createItem);
+  .post(protect, authorize("owner"), createItem);
 
-router.route("/:id").get(getItem).put(updateItem).delete(deleteItem);
+router
+  .route("/:id")
+  .get(getItem)
+  .put(protect, authorize("owner"), updateItem)
+  .delete(protect, authorize("owner"),deleteItem);
 
-router.route("/:id/photo").put(addImage);
+router.route("/:id/photo").put(protect, addImage);
 
-/*
-just for reference before using controllers
-router.post('/:id', (req, res) => {
-    res.status(200).json({
-        success: true,
-        msg: `you want to create this resto: ${req.params.id}`
-    })
-})
-*/
 
 module.exports = router;

@@ -12,12 +12,24 @@ const asyncHandler = require("../middleware/async");
 
 exports.createItem = asyncHandler(async (req, res, next) => {
   req.body.restaurant = req.params.restaurantId;
+  req.body.user = req.user.id;
+
   const restaurant  = await Restaurant.findById(req.params.restaurantId);
   if (!restaurant) {
     return next(
       new ErrorResponse(
         `Restaurant not found with id of ${req.params.restaurantId}`,
         404
+      )
+    );
+  }
+
+   // check permission
+   if(restaurant.user.toString() !== req.user.id ){
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add this Item to ${restaurant.name}`,
+        401
       )
     );
   }
@@ -46,6 +58,15 @@ exports.addImage = asyncHandler( async (req, res, next ) => {
   if (!item) {
     return next(
       new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+  if(item.user.toString() !== req.user.id ){
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add photo to this item for ${restaurant.name}`,
+        401
+      )
     );
   }
 
@@ -138,6 +159,15 @@ exports.updateItem = asyncHandler( async (req, res, next) => {
     );
   }
 
+  if(item.user.toString() !== req.user.id ){
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update this Item for ${restaurant.name}`,
+        401
+      )
+    );
+  }
+
   item = await Item.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
@@ -168,6 +198,16 @@ exports.deleteItem = asyncHandler( async (req, res, next) => {
       new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
     );
   }
+
+  if(item.user.toString() !== req.user.id ){
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to delete this Item for ${restaurant.name}`,
+        401
+      )
+    );
+  }
+
 
 await item.remove();
 

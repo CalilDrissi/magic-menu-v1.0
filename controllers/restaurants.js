@@ -11,6 +11,8 @@ const asyncHandler = require("../middleware/async");
 //*TODO
 
 exports.createRestaurant = asyncHandler(async (req, res, next) => {
+  // Add user from jwt
+  req.body.user= req.user.id;
   const restaurant = await Restaurant.create(req.body);
 
   res.status(201).json({
@@ -50,10 +52,7 @@ exports.getRestaurant = asyncHandler(async (req, res, next) => {
 // @access    Private
 
 exports.updateRestaurant = asyncHandler(async (req, res, next) => {
-    const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    let restaurant = await Restaurant.findById(req.params.id);
 
     if (!restaurant) {
       return next(
@@ -64,6 +63,20 @@ exports.updateRestaurant = asyncHandler(async (req, res, next) => {
       );
     }
 
+    // check permission
+    if(restaurant.user.toString() !== req.user.id ){
+      return next(
+        new ErrorResponse(
+          `User ${req.user.id} is not authorized to update this restaurant`,
+          401
+        )
+      );
+    }
+
+    restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
 
   res.status(200).json({
     success: true,
@@ -83,6 +96,14 @@ exports.deleteRestaurant = asyncHandler(async (req, res, next) => {
       new ErrorResponse(
         `Restaurant not found with id of ${req.params.id}`,
         404
+      )
+    );
+  }
+  if(restaurant.user.toString() !== req.user.id ){
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to delete this restaurant`,
+        401
       )
     );
   }

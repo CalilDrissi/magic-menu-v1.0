@@ -16,6 +16,7 @@ const itemRouter = require("./items.js");
 const router = express.Router();
 
 const advancedResults = require("../middleware/advancedResults");
+const { protect, authorize } = require('../middleware/auth');
 
 //Reroute into other ressrouce routers
 
@@ -24,13 +25,13 @@ router.use("/:restaurantId/items", itemRouter);
 router
   .route("/")
   .get(advancedResults(Restaurant, 'items'), getRestaurants)
-  .post(createRestaurant);
+  .post(protect, authorize('owner'),  createRestaurant);
 
 router
   .route("/:id")
   .get(getRestaurant)
-  .put(updateRestaurant)
-  .delete(deleteRestaurant);
+  .put(protect,  authorize('owner'), updateRestaurant)
+  .delete(protect,  authorize('owner'),  deleteRestaurant);
 
 /*
 just for reference before using controllers
