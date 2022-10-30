@@ -70,6 +70,16 @@ const RestaurantSchema = new mongoose.Schema(
 );
 
 
+// Reverse populate with virtuals
+//*! learn more about this. 
+RestaurantSchema.virtual('items', {
+  ref: 'Item',
+  localField: '_id',
+  foreignField: 'restaurant',
+  justOne: false
+});
+
+
 // Cascade delete courses when a bootcamp is deleted
 RestaurantSchema.pre('remove', async function(next) {
   console.log(`Items being removed from Restaurant ${this._id}`);

@@ -1,7 +1,9 @@
 const express = require("express");
+const advancedResults = require("../middleware/advancedResults");
+const Item = require("../models/Item");
 
 const router = express.Router({
-    mergeParams: true
+  mergeParams: true,
 });
 
 const {
@@ -10,22 +12,24 @@ const {
   createItem,
   updateItem,
   deleteItem,
-  addImage
+  addImage,
 } = require("../controllers/Items");
-
-
-router.route("/").get(getItems)
-    .post(createItem);
+const Restaurant = require("../models/Restaurant");
 
 router
-    .route("/:id")
-    .get(getItem)
-    .put(updateItem)
-    .delete(deleteItem);
-    
+  .route("/")
+  .get(
+    advancedResults(Item, {
+      path: "restaurant",  
+      select: "name address"
+    }),
+    getItems
+  )
+  .post(createItem);
+
+router.route("/:id").get(getItem).put(updateItem).delete(deleteItem);
 
 router.route("/:id/photo").put(addImage);
-
 
 /*
 just for reference before using controllers

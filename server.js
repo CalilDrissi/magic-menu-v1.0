@@ -1,4 +1,5 @@
 const express = require("express");
+const path  = require('path');
 const dotenv = require("dotenv");
 const fileupload = require("express-fileupload");
 const connectDB = require("./config/db");
@@ -13,6 +14,9 @@ connectDB();
 // loading routes
 const restaurants = require("./routes/restaurants");
 const items = require("./routes/items");
+const auth = require("./routes/auth");
+
+
 
 
 
@@ -27,6 +31,9 @@ app.use(express.json());
     // handling files upload
 app.use(fileupload());
 
+// set static folder 
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 
@@ -34,6 +41,7 @@ app.use(fileupload());
 // load  routers
 app.use("/api/v1/restaurants", restaurants);
 app.use("/api/v1/items", items);
+app.use("/api/v1/auth", auth);
 
 
 

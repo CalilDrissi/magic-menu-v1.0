@@ -188,26 +188,16 @@ await item.remove();
 // @access    Public
 
 exports.getItems = asyncHandler(async (req, res, next) => {
-    let query; 
     if (req.params.restaurantId) {
-      query = Item.find({ restaurant: req.params.restaurantId }).populate(
-        {
-          path: 'restaurant',
-          select: 'name'
-        }
-      );
-    } else {
-      query = Item.find().populate({
-        path: 'restaurant',
-        select: 'name'
-      });
-    }
-
-    const items = await query;
-    
-    res.status(200).json({
+      const items =  await  Item.find({ restaurant: req.params.restaurantId });
+      return res.status(200).json({
         success:true,
         count: items.length,
         data: items
-    })
+      });
+    } else {
+      res.status(200).json(res.advancedResults);
+    }
+
+   
   });

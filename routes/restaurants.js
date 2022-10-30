@@ -1,6 +1,5 @@
 const express = require("express");
-
-
+const Restaurant = require("../models/Restaurant");
 
 const {
   getRestaurants,
@@ -10,28 +9,28 @@ const {
   deleteRestaurant,
 } = require("../controllers/restaurants");
 
-// include other ressource routers 
+// include other ressource routers
 
-const itemRouter = require('./items.js');
-
+const itemRouter = require("./items.js");
 
 const router = express.Router();
 
-
+const advancedResults = require("../middleware/advancedResults");
 
 //Reroute into other ressrouce routers
 
 router.use("/:restaurantId/items", itemRouter);
 
-router.route("/").get(getRestaurants).post(createRestaurant);
+router
+  .route("/")
+  .get(advancedResults(Restaurant, 'items'), getRestaurants)
+  .post(createRestaurant);
 
 router
   .route("/:id")
   .get(getRestaurant)
   .put(updateRestaurant)
   .delete(deleteRestaurant);
-
-
 
 /*
 just for reference before using controllers
