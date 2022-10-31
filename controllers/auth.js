@@ -1,10 +1,8 @@
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const User = require('../models/User');
-
-
-// const sendEmail = require('../utils/sendEmail');
-// const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
+const crypto = require('crypto');
 
 
 // Get token from model, create cookie and send response
@@ -29,8 +27,6 @@ const sendTokenResponse = (user, statusCode, res) => {
     });
   };
   
-
-
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register/
@@ -75,11 +71,6 @@ exports.register = asyncHandler(async (req, res, next) => {
 
 
 
-
-
-
-
-
 // @desc      Login user
 // @route     POST /api/v1/auth/login
 // @access    Public
@@ -111,25 +102,6 @@ exports.login = asyncHandler(async (req, res, next) => {
 });
 
 
-
-
-
-// @desc      Log user out / clear cookie
-// @route     GET /api/v1/auth/logout
-// @access    Public
-exports.logout = asyncHandler(async (req, res, next) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: {},
-  });
-});
-
-
 // @desc      Get current logged in user
 // @route     GET /api/v1/auth/me
 // @access    Private
@@ -144,43 +116,6 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 });
 
 
-
-// @desc      Update user details
-// @route     PUT /api/v1/auth/updatedetails
-// @access    Private
-exports.updateDetails = asyncHandler(async (req, res, next) => {
-  const fieldsToUpdate = {
-    name: req.body.name,
-    email: req.body.email,
-  };
-
-  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-    new: true,
-    runValidators: true,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: user,
-  });
-});
-
-// @desc      Update password
-// @route     PUT /api/v1/auth/updatepassword
-// @access    Private
-exports.updatePassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
-
-  // Check current password
-  if (!(await user.matchPassword(req.body.currentPassword))) {
-    return next(new ErrorResponse('Password is incorrect', 401));
-  }
-
-  user.password = req.body.newPassword;
-  await user.save();
-
-  sendTokenResponse(user, 200, res);
-});
 
 // @desc      Forgot password
 // @route     POST /api/v1/auth/forgotpassword
@@ -223,6 +158,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   }
 });
 
+
 // @desc      Reset password
 // @route     PUT /api/v1/auth/resetpassword/:resettoken
 // @access    Public
@@ -251,47 +187,105 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
-/**
- * @desc    Confirm Email
- * @route   GET /api/v1/auth/confirmemail
- * @access  Public
- */
-exports.confirmEmail = asyncHandler(async (req, res, next) => {
-  // grab token from email
-  const { token } = req.query;
 
-  if (!token) {
-    return next(new ErrorResponse('Invalid Token', 400));
-  }
 
-  const splitToken = token.split('.')[0];
-  const confirmEmailToken = crypto
-    .createHash('sha256')
-    .update(splitToken)
-    .digest('hex');
+// @desc      Update user details name & email
+// @route     PUT /api/v1/auth/updatedetails
+// @access    Private
+exports.updateDetails = asyncHandler(async (req, res, next) => { 
+  const fieldsToUpdate = {
+    name: req.body.name,
+    email: req.body.email, 
+  };
 
-  // get user by token
-  const user = await User.findOne({
-    confirmEmailToken,
-    isEmailConfirmed: false,
+  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+    new: true,
+    runValidators: true,
   });
 
-  if (!user) {
-    return next(new ErrorResponse('Invalid Token', 400));
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+
+
+
+// @desc      Update password
+// @route     PUT /api/v1/auth/updatepassword
+// @access    Private
+exports.updatePassword = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+  
+  // Check current password
+  if (!(await user.matchPassword(req.body.currentPassword))) {
+    return next(new ErrorResponse('Password is incorrect', 401));
   }
-
-  // update confirmed to true
-  user.confirmEmailToken = undefined;
-  user.isEmailConfirmed = true;
-
-  // save
-  user.save({ validateBeforeSave: false });
-
-  // return token
+  
+  user.password = req.body.newPassword;
+  await user.save();
+  
   sendTokenResponse(user, 200, res);
 });
 
 
 
 
+// @desc      Log user out / clear cookie
+// @route     GET /api/v1/auth/logout
+// @access    Public
+exports.logout = asyncHandler(async (req, res, next) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
 
+  res.status(200).json({
+    success: true,
+    data: {},
+  });
+});
+
+// ######################################
+
+
+// @route   GET /api/v1/auth/confirmemail
+// @access  Public
+/*
+exports.confirmEmail = asyncHandler(async (req, res, next) => {
+  // grab token from email
+  const { token } = req.query;
+  
+  if (!token) {
+    return next(new ErrorResponse('Invalid Token', 400));
+  }
+  
+  const splitToken = token.split('.')[0];
+  const confirmEmailToken = crypto
+  .createHash('sha256')
+  .update(splitToken)
+  .digest('hex');
+  
+  // get user by token
+  const user = await User.findOne({
+    confirmEmailToken,
+    isEmailConfirmed: false,
+  });
+  
+  if (!user) {
+    return next(new ErrorResponse('Invalid Token', 400));
+  }
+  
+  // update confirmed to true
+  user.confirmEmailToken = undefined;
+  user.isEmailConfirmed = true;
+  
+  // save
+  user.save({ validateBeforeSave: false });
+  
+  // return token
+  sendTokenResponse(user, 200, res);
+});
+
+*/

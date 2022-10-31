@@ -1,8 +1,14 @@
 const express = require("express");
 const path = require("path");
 const dotenv = require("dotenv");
+const helmet = require('helmet');
 const fileupload = require("express-fileupload");
 const cookieParser = require("cookie-parser");
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/error");
 
@@ -16,6 +22,7 @@ connectDB();
 const restaurants = require("./routes/restaurants");
 const items = require("./routes/items");
 const auth = require("./routes/auth");
+const users = require("./routes/users");
 
 // initialize the app
 const app = express();
@@ -27,6 +34,27 @@ app.use(express.json());
 app.use(fileupload());
 // Cookie parser
 app.use(cookieParser());
+// Sanitize data
+app.use(mongoSanitize());
+
+// Set security headers
+app.use(helmet());
+
+// Prevent XSS attacks
+app.use(xss());
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 mins
+  max: 500
+});
+app.use(limiter);
+
+// Prevent http param pollution
+app.use(hpp());
+
+// Enable CORS
+app.use(cors());
+
 
 // set static folder
 app.use(express.static(path.join(__dirname, "public")));
@@ -35,6 +63,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/v1/restaurants", restaurants);
 app.use("/api/v1/items", items);
 app.use("/api/v1/auth", auth);
+app.use("/api/v1/users", users);
 
 // load error middleware
 app.use(errorHandler);

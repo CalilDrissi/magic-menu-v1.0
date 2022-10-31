@@ -1,10 +1,8 @@
-const path = require('path');
+const path = require("path");
 const Item = require("../models/Item");
 const Restaurant = require("../models/Restaurant");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-
-
 
 //*TODO Create a menu Item
 //*? route POST /api/v1/restaurants/:restaurantId/Items
@@ -14,7 +12,7 @@ exports.createItem = asyncHandler(async (req, res, next) => {
   req.body.restaurant = req.params.restaurantId;
   req.body.user = req.user.id;
 
-  const restaurant  = await Restaurant.findById(req.params.restaurantId);
+  const restaurant = await Restaurant.findById(req.params.restaurantId);
   if (!restaurant) {
     return next(
       new ErrorResponse(
@@ -24,8 +22,8 @@ exports.createItem = asyncHandler(async (req, res, next) => {
     );
   }
 
-   // check permission
-   if(restaurant.user.toString() !== req.user.id ){
+  // check permission
+  if (restaurant.user.toString() !== req.user.id) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to add this Item to ${restaurant.name}`,
@@ -36,24 +34,17 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 
   const item = await Item.create(req.body);
 
-
-
   res.status(200).json({
     success: true,
     resto: restaurant.name,
-    data: item
-  })
-
-
-
-
-
+    data: item,
+  });
 });
 
 //*TODO  add a photo to the menu  item
 //*? route PUT /api/v1/items/:id/photo
 //*! Private
-exports.addImage = asyncHandler( async (req, res, next ) => {
+exports.addImage = asyncHandler(async (req, res, next) => {
   const item = await Item.findById(req.params.id);
   if (!item) {
     return next(
@@ -61,7 +52,7 @@ exports.addImage = asyncHandler( async (req, res, next ) => {
     );
   }
 
-  if(item.user.toString() !== req.user.id ){
+  if (item.user.toString() !== req.user.id) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to add photo to this item for ${restaurant.name}`,
@@ -70,10 +61,8 @@ exports.addImage = asyncHandler( async (req, res, next ) => {
     );
   }
 
-  if(!req.files) {
-    return next(
-      new ErrorResponse(`no image uploaded`, 400)
-    ); 
+  if (!req.files) {
+    return next(new ErrorResponse(`no image uploaded`, 400));
   }
 
   // console.log(req.files)
@@ -81,56 +70,41 @@ exports.addImage = asyncHandler( async (req, res, next ) => {
   const file = req.files.file;
 
   // validation  file is photo . file size not too big.
-  if(!file.mimetype.startsWith('image')) {
-    return next(
-      new ErrorResponse(`must be an image file`, 400)
-    );  
+  if (!file.mimetype.startsWith("image")) {
+    return next(new ErrorResponse(`must be an image file`, 400));
   }
-// check file size
+  // check file size
   if (file.size > process.env.MAX_FILE_UPLOAD) {
-    return next(
-      new ErrorResponse(`must be under 1MB`, 400)
-    );  
+    return next(new ErrorResponse(`must be under 1MB`, 400));
   }
 
-// create custom file name
-file.name = `photo_${item._id}${path.parse(file.name).ext}`;
+  // create custom file name
+  file.name = `photo_${item._id}${path.parse(file.name).ext}`;
 
-// console.log(file.name);
+  // console.log(file.name);
 
-// upload the photo
+  // upload the photo
 
-file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async err=> {
-  if(err) {
-    console.error(err);
-    return next(
-      new ErrorResponse(`upload failed`, 500)
-    );  
-  }
-await Item.findByIdAndUpdate(req.params.id, {photo: file.name});
-res.status(200).json({
-  success: true,
-  data: file.name
-})
-
-})
-
+  file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
+    if (err) {
+      console.error(err);
+      return next(new ErrorResponse(`upload failed`, 500));
+    }
+    await Item.findByIdAndUpdate(req.params.id, { photo: file.name });
+    res.status(200).json({
+      success: true,
+      data: file.name,
+    });
+  });
 });
-
-
-
-
-
-
-
 
 //*? read a single menu item
 // @route     GET /api/v1/items/:id
 // @access    Public
 exports.getItem = asyncHandler(async (req, res, next) => {
   const item = await Item.findById(req.params.id).populate({
-    path: 'restaurant',
-    select: 'name'
+    path: "restaurant",
+    select: "name",
   });
 
   if (!item) {
@@ -141,25 +115,23 @@ exports.getItem = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: item
+    data: item,
   });
 });
-
-
 
 //*? update a menu item
 // * @route     PUT /api/v1/items/:id
 // *! @access    Private
 
-exports.updateItem = asyncHandler( async (req, res, next) => {
-  let  item = await Item.findById(req.params.id);
+exports.updateItem = asyncHandler(async (req, res, next) => {
+  let item = await Item.findById(req.params.id);
   if (!item) {
     return next(
       new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
     );
   }
 
-  if(item.user.toString() !== req.user.id ){
+  if (item.user.toString() !== req.user.id) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to update this Item for ${restaurant.name}`,
@@ -170,27 +142,23 @@ exports.updateItem = asyncHandler( async (req, res, next) => {
 
   item = await Item.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   }).populate({
-    path: 'restaurant',
-    select: "name"
+    path: "restaurant",
+    select: "name",
   });
 
   res.status(200).json({
     success: true,
-    data: item
+    data: item,
   });
-
-
 });
-
-
 
 //*? delete a menu item
 // * @route     DELETE /api/v1/items/:id
 // *! @access    Private
 
-exports.deleteItem = asyncHandler( async (req, res, next) => {
+exports.deleteItem = asyncHandler(async (req, res, next) => {
   const item = await Item.findById(req.params.id);
 
   if (!item) {
@@ -199,7 +167,7 @@ exports.deleteItem = asyncHandler( async (req, res, next) => {
     );
   }
 
-  if(item.user.toString() !== req.user.id ){
+  if (item.user.toString() !== req.user.id) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to delete this Item for ${restaurant.name}`,
@@ -208,18 +176,13 @@ exports.deleteItem = asyncHandler( async (req, res, next) => {
     );
   }
 
-
-await item.remove();
+  await item.remove();
 
   res.status(200).json({
     success: true,
-    data:  {}
+    data: {},
   });
-
-
 });
-
-
 
 //*? get all menu items of a single restaurant
 // @desc      Get items
@@ -228,16 +191,14 @@ await item.remove();
 // @access    Public
 
 exports.getItems = asyncHandler(async (req, res, next) => {
-    if (req.params.restaurantId) {
-      const items =  await  Item.find({ restaurant: req.params.restaurantId });
-      return res.status(200).json({
-        success:true,
-        count: items.length,
-        data: items
-      });
-    } else {
-      res.status(200).json(res.advancedResults);
-    }
-
-   
-  });
+  if (req.params.restaurantId) {
+    const items = await Item.find({ restaurant: req.params.restaurantId });
+    return res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } else {
+    res.status(200).json(res.advancedResults);
+  }
+});
