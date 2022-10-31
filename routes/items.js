@@ -15,7 +15,7 @@ const {
   updateItem,
   deleteItem,
   addImage,
-} = require("../controllers/Items");
+} = require("../controllers/items");
 
 
 router
