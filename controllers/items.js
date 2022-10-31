@@ -1,8 +1,12 @@
 const path = require("path");
+const imageKit = require("imagekit");
 const Item = require("../models/Item");
 const Restaurant = require("../models/Restaurant");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
+
+
+
 
 //*TODO Create a menu Item
 //*? route POST /api/v1/restaurants/:restaurantId/Items
@@ -44,7 +48,7 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 //*TODO  add a photo to the menu  item
 //*? route PUT /api/v1/items/:id/photo
 //*! Private
-exports.addImage = asyncHandler(async (req, res, next) => {
+exports.addImageLocal = asyncHandler(async (req, res, next) => {
   const item = await Item.findById(req.params.id);
   if (!item) {
     return next(
@@ -90,13 +94,104 @@ exports.addImage = asyncHandler(async (req, res, next) => {
       console.error(err);
       return next(new ErrorResponse(`upload failed`, 500));
     }
+    
     await Item.findByIdAndUpdate(req.params.id, { photo: file.name });
     res.status(200).json({
       success: true,
       data: file.name,
     });
   });
+
+
+
 });
+
+
+
+
+//*! __________
+exports.addImage= asyncHandler(async (req, res, next) => {
+
+  const item = await Item.findById(req.params.id);
+
+  if (!item) {
+    return next(
+      new ErrorResponse(`No Item with the id of ${req.params.id}`, 404)
+    );
+  }
+
+  if (item.user.toString() !== req.user.id) {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add photo to this item for ${restaurant.name}`,
+        401
+      )
+    );
+  }
+
+  if (!req.files) {
+    return next(new ErrorResponse(`no image uploaded`, 400));
+  }
+
+  const file = req.files.file;
+
+// validation  file is photo . file size not too big.
+if (!file.mimetype.startsWith("image")) {
+  return next(new ErrorResponse(`must be an image file`, 400));
+}
+// check file size
+if (file.size > process.env.MAX_FILE_UPLOAD) {
+  return next(new ErrorResponse(`must be under 1MB`, 400));
+}
+
+ // create custom file name
+ file.name = `photo_${item._id}${path.parse(file.name).ext}`;
+
+ const img = `https://ik.imagekit.io/magicmenuv1/${file.name}`;
+
+
+
+// here add upload to cdn 
+
+const imagekit = new imageKit({
+
+  publicKey : "public_gOJ5jA/zd/6CpryYQFcNsSaczMw=",
+
+  privateKey : process.env.PRIVATE_KEY,
+
+  urlEndpoint : "https://ik.imagekit.io/magicmenuv1"
+
+});
+
+
+const uploadResponse = await imagekit.upload({
+  file: file.data, 
+  fileName: file.name,
+  isPrivateFile: false,
+  useUniqueFileName:false
+});
+
+
+
+await Item.findByIdAndUpdate(req.params.id, { photo: img });
+res.status(200).json({
+  success: true,
+  data: img,
+});
+
+
+
+
+
+});
+
+
+
+
+
+
+
+
 
 //*? read a single menu item
 // @route     GET /api/v1/items/:id
@@ -118,6 +213,11 @@ exports.getItem = asyncHandler(async (req, res, next) => {
     data: item,
   });
 });
+
+
+
+
+
 
 //*? update a menu item
 // * @route     PUT /api/v1/items/:id
@@ -154,6 +254,9 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
   });
 });
 
+
+
+
 //*? delete a menu item
 // * @route     DELETE /api/v1/items/:id
 // *! @access    Private
@@ -183,6 +286,8 @@ exports.deleteItem = asyncHandler(async (req, res, next) => {
     data: {},
   });
 });
+
+
 
 //*? get all menu items of a single restaurant
 // @desc      Get items
